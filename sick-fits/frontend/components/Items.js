@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Query } from "react-apollo";
 import qql from "graphql-tag";
 import styled from "styled-components";
+import Item from "./Item";
 
 const ALL_ITEMS_QUERY = qql`
     query ALL_ITEMS_QUERY {
@@ -42,14 +43,15 @@ export default class Items extends Component {
             if (loading) {
               return <p>Hey fella, I'm still loading</p>;
             }
-            console.log(data);
             return (
               //   <p>
               //     Hey fella, I've got these {data.items.length} items for you: "
               //   </p>
               <StyledItems>
                 {data.items.map(item => (
-                  <p>{item.id}</p>
+                  <Item item={item} key={item.id}>
+                    item.title
+                  </Item>
                 ))}
               </StyledItems>
             );
