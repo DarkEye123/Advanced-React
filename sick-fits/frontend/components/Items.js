@@ -29,6 +29,10 @@ const StyledItems = styled.div`
   grid-gap: 60px;
   max-width: ${props => props.theme.maxWidth};
   margin: 0 auto;
+  @media (max-width: ${props => props.theme.singleItemSize}) {
+    grid-template-columns: 1fr;
+    justify-content: center;
+  }
 `;
 
 export default class Items extends Component {
