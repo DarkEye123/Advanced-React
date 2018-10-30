@@ -131,7 +131,7 @@ export default class CreateItem extends Component {
                 />
               </label>
               <label htmlFor="description">
-                Title
+                Description
                 {/* react can handle value in text area, by default there is no such prop */}
                 <textarea
                   name="description"
