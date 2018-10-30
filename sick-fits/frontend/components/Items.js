@@ -1,22 +1,22 @@
 import React, { Component } from "react";
 import { Query } from "react-apollo";
-import qql from "graphql-tag";
+import gql from "graphql-tag";
 import styled from "styled-components";
 import Item from "./Item";
 
-const ALL_ITEMS_QUERY = qql`
-    query ALL_ITEMS_QUERY {
-    items{
-        id
-        title
-        description
-        image 
-        largeImage 
-        price
-        createdAt
-        updatedAt
+const ALL_ITEMS_QUERY = gql`
+  query ALL_ITEMS_QUERY {
+    items {
+      id
+      title
+      description
+      image
+      largeImage
+      price
+      createdAt
+      updatedAt
     }
-}
+  }
 `;
 
 const Center = styled.div`
