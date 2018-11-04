@@ -22,6 +22,19 @@ const mutations = {
       info
     );
     return item;
+  },
+
+  async deleteItem(parent, args, ctx, info) {
+    // 1. find the item
+    // 2.check permissions (owner or has permission to delete it)
+    // delete the item
+    const where = { id: args.id };
+    const item = await ctx.db.query.item({ where }, `{id title}`); //info contains data from FE (delete query)
+    if (!item) {
+      console.error("Item not present");
+      return null;
+    }
+    return ctx.db.mutation.deleteItem({ where }, info);
   }
 };
 
