@@ -3,10 +3,12 @@ import { Query } from "react-apollo";
 import gql from "graphql-tag";
 import styled from "styled-components";
 import Item from "./Item";
+import Pagination from "./Pagination";
+import { perPage } from "../config";
 
 export const ALL_ITEMS_QUERY = gql`
-  query ALL_ITEMS_QUERY {
-    items {
+  query ALL_ITEMS_QUERY($skip: Int = 0, $first: Int = ${perPage}) {
+    items(skip: $skip, first: $first, orderBy: createdAt_DESC) {
       id
       title
       description
@@ -37,9 +39,11 @@ const StyledItems = styled.div`
 
 export default class Items extends Component {
   render() {
+    const skip = this.props.page * perPage - perPage;
     return (
       <Center>
-        <Query query={ALL_ITEMS_QUERY}>
+        <Pagination page={this.props.page} />
+        <Query query={ALL_ITEMS_QUERY} variables={{ skip }}>
           {({ data, error, loading }) => {
             if (error) {
               return <p>Hey fella, I've got an error {error}</p>;
@@ -48,9 +52,6 @@ export default class Items extends Component {
               return <p>Hey fella, I'm still loading</p>;
             }
             return (
-              //   <p>
-              //     Hey fella, I've got these {data.items.length} items for you: "
-              //   </p>
               <StyledItems>
                 {data.items.map(item => (
                   <Item item={item} key={item.id}>
@@ -61,6 +62,7 @@ export default class Items extends Component {
             );
           }}
         </Query>
+        <Pagination page={this.props.page} />
       </Center>
     );
   }
