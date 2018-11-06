@@ -1,3 +1,6 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
 const mutations = {
   // return promise
   async createItem(parent, args, ctx, info) {
@@ -16,10 +19,10 @@ const mutations = {
     const item = await ctx.db.mutation.updateItem(
       {
         data: updates,
-        where: { id: args.id }
+        where: { id: args.id },
       },
       // this is the type which needs to be returned
-      info
+      info,
     );
     return item;
   },
@@ -35,7 +38,21 @@ const mutations = {
       return null;
     }
     return ctx.db.mutation.deleteItem({ where }, info);
-  }
+  },
+
+  async signUp(parent, args, ctx, info) {
+    const email = args.email.toLowerCase();
+    const password = await bcrypt.hash(args.password, 10);
+
+    const user = ctx.db.mutation.createUser(
+      { data: { ...args, password, email, permissions: { set: ["USER"] } } },
+      info,
+    );
+    const token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
+    console.log(ctx);
+    ctx.response.cookie("token", token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 365 });
+    return user;
+  },
 };
 
 module.exports = mutations;
