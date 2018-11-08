@@ -5,18 +5,17 @@ import ErrorMessage from "./ErrorMessage";
 import Form from "./styles/Form";
 import { CURRENT_USER_QUERY } from "./User";
 
-const SIGNUP_MUTATION = gql`
-  mutation SIGNUP_MUTATION($email: String!, $name: String, $password: String!) {
-    signUp(email: $email, name: $name, password: $password) {
+const SIGNIN_MUTATION = gql`
+  mutation SIGNIN_MUTATION($email: String!, $password: String!) {
+    signIn(email: $email, password: $password) {
       id
     }
   }
 `;
 
-export default class SignUp extends Component {
+export default class SignIn extends Component {
   state = {
     email: "",
-    name: "",
     password: "",
   };
 
@@ -25,31 +24,20 @@ export default class SignUp extends Component {
   };
   render() {
     return (
-      <Mutation mutation={SIGNUP_MUTATION} variables={this.state} refetchQueries={[{ query: CURRENT_USER_QUERY }]}>
-        {(signUp, { loading, error }) => {
+      <Mutation mutation={SIGNIN_MUTATION} variables={this.state} refetchQueries={[{ query: CURRENT_USER_QUERY }]}>
+        {(signIn, { loading, error }) => {
           return (
             <Form
               method="post"
               onSubmit={async e => {
                 e.preventDefault();
-                const resp = await signUp();
-                this.setState({ email: "", name: "", password: "" });
+                const resp = await signIn();
+                this.setState({ email: "", password: "" });
               }}
             >
               <fieldset disabled={loading} aria-busy={loading}>
                 <ErrorMessage error={error} />
-                <h2>Sign Up for An Account</h2>
-                <label htmlFor="name">
-                  Name
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    placeholder="name"
-                    onChange={this.updateState}
-                    value={this.state.name}
-                  />
-                </label>
+                <h2>Sign In</h2>
                 <label htmlFor="email">
                   Email
                   <input
@@ -73,7 +61,7 @@ export default class SignUp extends Component {
                   />
                 </label>
               </fieldset>
-              <button type="submit">Register</button>
+              <button type="submit">Sign In</button>
             </Form>
           );
         }}

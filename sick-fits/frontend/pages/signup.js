@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import SignUp from "../components/SignUp";
+import SignIn from "../components/SignIn";
 const StyledGroup = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -9,8 +10,7 @@ const StyledGroup = styled.div`
 const Login = () => (
   <StyledGroup>
     <SignUp />
-    <SignUp />
-    <SignUp />
+    <SignIn />
   </StyledGroup>
 );
 

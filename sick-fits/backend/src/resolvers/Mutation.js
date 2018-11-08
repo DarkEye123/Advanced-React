@@ -44,12 +44,25 @@ const mutations = {
     const email = args.email.toLowerCase();
     const password = await bcrypt.hash(args.password, 10);
 
-    const user = ctx.db.mutation.createUser(
+    const user = await ctx.db.mutation.createUser(
       { data: { ...args, password, email, permissions: { set: ["USER"] } } },
       info,
     );
     const token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
-    console.log(ctx);
+    ctx.response.cookie("token", token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 365 });
+    return user;
+  },
+  async signIn(parent, { email, password }, ctx, info) {
+    const user = await ctx.db.query.user({ where: { email } });
+    if (!user) {
+      throw Error(`No user with email: ${email} is registered`);
+    }
+    if (!(await bcrypt.compare(password, user.password))) {
+      throw Error("Invalid password");
+    }
+
+    token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
+
     ctx.response.cookie("token", token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 365 });
     return user;
   },
