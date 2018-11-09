@@ -2,15 +2,32 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 const { randomBytes } = require("crypto");
+const { transport, generateResetTokenEmail } = require("../mail");
 
 const mutations = {
   // return promise
   async createItem(parent, args, ctx, info) {
-    const item = await ctx.db.mutation.createItem({ data: { ...args } });
+    if (!ctx.request.userId) {
+      throw Error("You need to be logged in to do that");
+    }
+    const item = await ctx.db.mutation.createItem({
+      data: {
+        ...args,
+        user: {
+          connect: {
+            id: ctx.request.userId,
+          },
+        },
+      },
+    });
     return item;
   },
 
   async updateItem(parent, args, ctx, info) {
+    if (!ctx.request.userId) {
+      throw Error("You need to be logged in to do that");
+    }
+    // TODO add comparison of the owner
     const updates = { ...args };
     delete updates.id;
     const item = await ctx.db.mutation.updateItem(
@@ -77,6 +94,13 @@ const mutations = {
     const updatedUser = await ctx.db.mutation.updateUser({
       where: { email },
       data: { resetToken: (await resetToken).toString("hex"), resetTokenExpiry },
+    });
+
+    await transport.sendMail({
+      to: updatedUser.email,
+      from: "hardcore@brazzers.com",
+      subject: "Reset Password",
+      html: generateResetTokenEmail(updatedUser.resetToken),
     });
 
     return updatedUser.resetToken;

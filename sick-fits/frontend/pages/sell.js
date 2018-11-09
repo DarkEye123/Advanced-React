@@ -1,4 +1,9 @@
 import CreateItem from "../components/CreateItem";
-const Sell = props => <CreateItem />;
+import RequireSignIn from "../components/RequireSignIn";
+const Sell = props => (
+  <RequireSignIn>
+    <CreateItem />
+  </RequireSignIn>
+);
 
 export default Sell;
