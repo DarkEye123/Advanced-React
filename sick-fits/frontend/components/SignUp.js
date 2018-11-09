@@ -43,7 +43,6 @@ export default class SignUp extends Component {
                   Name
                   <input
                     type="text"
-                    id="name"
                     name="name"
                     placeholder="name"
                     onChange={this.updateState}
@@ -54,7 +53,6 @@ export default class SignUp extends Component {
                   Email
                   <input
                     type="text"
-                    id="email"
                     name="email"
                     placeholder="email"
                     onChange={this.updateState}
@@ -65,7 +63,6 @@ export default class SignUp extends Component {
                   Password
                   <input
                     type="text"
-                    id="password"
                     name="password"
                     placeholder="password"
                     onChange={this.updateState}

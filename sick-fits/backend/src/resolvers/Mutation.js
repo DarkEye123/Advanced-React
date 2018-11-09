@@ -1,14 +1,11 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { promisify } = require("util");
+const { randomBytes } = require("crypto");
 
 const mutations = {
   // return promise
   async createItem(parent, args, ctx, info) {
-    // console.log(args);
-    // console.log(ctx);
-    // console.log(info);
-    // const item = await ctx.db.mutation.createItem({ data: { ...args } }, info);
-    // const item = await ctx.db.mutation.createItem({ data: { ...args } }, info);
     const item = await ctx.db.mutation.createItem({ data: { ...args } });
     return item;
   },
@@ -28,9 +25,6 @@ const mutations = {
   },
 
   async deleteItem(parent, args, ctx, info) {
-    // 1. find the item
-    // 2.check permissions (owner or has permission to delete it)
-    // delete the item
     const where = { id: args.id };
     const item = await ctx.db.query.item({ where }, `{id title}`); //info contains data from FE (delete query)
     if (!item) {
@@ -65,6 +59,49 @@ const mutations = {
 
     ctx.response.cookie("token", token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 365 });
     return user;
+  },
+
+  async logout(parent, args, ctx, info) {
+    ctx.response.clearCookie("token");
+    return ctx.request.userId;
+  },
+
+  async requestResetToken(parent, { email }, ctx, info) {
+    const user = await ctx.db.query.user({ where: { email } });
+    if (!user) {
+      throw Error(`No user with email: ${email} is registered`);
+    }
+
+    const resetToken = promisify(randomBytes)(20);
+    const resetTokenExpiry = Date.now() + 1000 * 60 * 60; // hour
+    const updatedUser = await ctx.db.mutation.updateUser({
+      where: { email },
+      data: { resetToken: (await resetToken).toString("hex"), resetTokenExpiry },
+    });
+
+    return updatedUser.resetToken;
+  },
+
+  async resetPassword(parent, { resetToken, password }, ctx, info) {
+    const user = await ctx.db.query.user({ where: { resetToken } });
+    if (!user) {
+      throw Error(`Token ${resetToken} does not exist`);
+    }
+    if (user.resetTokenExpiry < Date.now()) {
+      ctx.db.mutation.updateUser({ where: { resetToken }, data: { resetToken: null, resetTokenExpiry: null } });
+      throw Error(`Token ${resetToken} is expired`);
+    }
+    const hashedPass = await bcrypt.hash(password, 10);
+
+    const updatedUser = await ctx.db.mutation.updateUser({
+      where: { resetToken },
+      data: { resetToken: null, resetTokenExpiry: null, password: hashedPass },
+    });
+
+    token = jwt.sign({ userId: updatedUser.id }, process.env.APP_SECRET);
+
+    ctx.response.cookie("token", token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 365 });
+    return { mesage: null };
   },
 };
 

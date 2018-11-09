@@ -19,6 +19,6 @@ export default class User extends Component {
   }
 }
 
-User.PropTypes = {
+User.propTypes = {
   children: PropTypes.func.isRequired,
 };
