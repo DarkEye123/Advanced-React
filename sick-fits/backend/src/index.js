@@ -23,6 +23,6 @@ server.use((req, res, next) => {
   }
 });
 
-server.start({ cors: { credentials: true, origin: process.env.FRONTEND_URL } }, deets => {
+server.start({ cors: { credentials: true, origin: [process.env.FRONTEND_URL, process.env.BACKED_URL] } }, deets => {
   console.log(`Server is now running on: http://localhost:${deets.port}`);
 });
