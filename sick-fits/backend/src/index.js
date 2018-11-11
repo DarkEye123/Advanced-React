@@ -15,9 +15,9 @@ server.use((req, res, next) => {
     const { token } = req.cookies;
     if (token) {
       console.log("detected token", token);
-      const { userId } = jwt.verify(req.cookies.token, process.env.APP_SECRET);
-      console.log("detected id:", userId);
-      req.userId = userId;
+      const { userID } = jwt.verify(req.cookies.token, process.env.APP_SECRET);
+      console.log("detected id:", userID);
+      req.userID = userID;
     }
     next();
   }

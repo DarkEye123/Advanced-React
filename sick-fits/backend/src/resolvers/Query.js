@@ -10,18 +10,18 @@ const Query = {
   item: forwardTo("db"),
   itemsConnection: forwardTo("db"),
   async me(parent, args, ctx, info) {
-    const id = ctx.request.userId;
+    const id = ctx.request.userID;
     if (!id) {
       return null;
     }
     return ctx.db.query.user({ where: { id } }, info);
   },
   async users(parent, args, ctx, info) {
-    const { userId } = ctx.request;
-    if (!userId) {
+    const { userID } = ctx.request;
+    if (!userID) {
       throw Error("You need to be logged in to do that");
     }
-    const { permissions } = await ctx.db.query.user({ where: { id: userId } }, "{permissions}");
+    const { permissions } = await ctx.db.query.user({ where: { id: userID } }, "{permissions}");
     const permissionsNeeded = ["ADMIN", "PERMISSION_UPDATE"];
     if (!hasPermission(permissions, ["ADMIN", "PERMISSION_UPDATE"])) {
       throw new Error(`You do not have sufficient permissions!\n\

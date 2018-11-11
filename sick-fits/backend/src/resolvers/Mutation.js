@@ -3,11 +3,14 @@ const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 const { randomBytes } = require("crypto");
 const { transport, generateResetTokenEmail } = require("../mail");
+const { hasPermission } = require("../utils");
+
+const UPDATE_PERMISSIONS = ["ADMIN", "PERMISSION_UPDATE"]; // TODO add to middleware?
 
 const mutations = {
   // return promise
   async createItem(parent, args, ctx, info) {
-    if (!ctx.request.userId) {
+    if (!ctx.request.userID) {
       throw Error("You need to be logged in to do that");
     }
     const item = await ctx.db.mutation.createItem({
@@ -15,7 +18,7 @@ const mutations = {
         ...args,
         user: {
           connect: {
-            id: ctx.request.userId,
+            id: ctx.request.userID,
           },
         },
       },
@@ -24,7 +27,7 @@ const mutations = {
   },
 
   async updateItem(parent, args, ctx, info) {
-    if (!ctx.request.userId) {
+    if (!ctx.request.userID) {
       throw Error("You need to be logged in to do that");
     }
     // TODO add comparison of the owner
@@ -59,7 +62,7 @@ const mutations = {
       { data: { ...args, password, email, permissions: { set: ["USER"] } } },
       info,
     );
-    const token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
+    const token = jwt.sign({ userID: user.id }, process.env.APP_SECRET);
     ctx.response.cookie("token", token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 365 });
     return user;
   },
@@ -72,7 +75,7 @@ const mutations = {
       throw Error("Invalid password");
     }
 
-    token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
+    token = jwt.sign({ userID: user.id }, process.env.APP_SECRET);
 
     ctx.response.cookie("token", token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 365 });
     return user;
@@ -80,7 +83,7 @@ const mutations = {
 
   async logout(parent, args, ctx, info) {
     ctx.response.clearCookie("token");
-    return ctx.request.userId;
+    return ctx.request.userID;
   },
 
   async requestResetToken(parent, { email }, ctx, info) {
@@ -122,10 +125,31 @@ const mutations = {
       data: { resetToken: null, resetTokenExpiry: null, password: hashedPass },
     });
 
-    token = jwt.sign({ userId: updatedUser.id }, process.env.APP_SECRET);
+    token = jwt.sign({ userID: updatedUser.id }, process.env.APP_SECRET);
 
     ctx.response.cookie("token", token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 365 });
     return { mesage: null };
+  },
+
+  async updatePermissions(parent, { id, permissions }, ctx, info) {
+    if (!ctx.request.userID) {
+      throw Error("You need to be logged in to do that");
+    }
+    const caller = await ctx.db.query.user({ where: { id: ctx.request.userID } }, `{permissions}`);
+    if (!caller) {
+      throw Error(`User from ctx was not found`);
+    }
+
+    if (!hasPermission(caller.permissions, UPDATE_PERMISSIONS)) {
+      throw Error(`Unauthorized,  - request for one of ${UPDATE_PERMISSIONS} scopes`);
+    }
+
+    const userToUpdate = await ctx.db.query.user({ where: { id } }, `{permissions}`);
+    if (!userToUpdate) {
+      throw Error(`Requested user was not found`);
+    }
+
+    return ctx.db.mutation.updateUser({ where: { id }, data: { permissions: { set: permissions } } }, info);
   },
 };
 
