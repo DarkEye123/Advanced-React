@@ -5,7 +5,8 @@ const { randomBytes } = require("crypto");
 const { transport, generateResetTokenEmail } = require("../mail");
 const { hasPermission } = require("../utils");
 
-const UPDATE_PERMISSIONS = ["ADMIN", "PERMISSION_UPDATE"]; // TODO add to middleware?
+const PERMISSIONS_UPDATE_PERMISSIONS = ["ADMIN", "PERMISSION_UPDATE"]; // TODO add to middleware?
+const ITEM_DELETE_PERMISSIONS = ["ADMIN", "ITEM_DELETE"]; // TODO add to middleware?
 
 const mutations = {
   // return promise
@@ -45,12 +46,13 @@ const mutations = {
   },
 
   async deleteItem(parent, args, ctx, info) {
+    const caller = await getVerifiedUser(ctx);
     const where = { id: args.id };
-    const item = await ctx.db.query.item({ where }, `{id title}`); //info contains data from FE (delete query)
+    const item = await ctx.db.query.item({ where }, `{id title user{id}}`); //info contains data from FE (delete query)
     if (!item) {
-      console.error("Item not present");
-      return null;
+      throw Error("requested item does not exists");
     }
+    verifyAuthorization(caller, ITEM_DELETE_PERMISSIONS, item.user.id);
     return ctx.db.mutation.deleteItem({ where }, info);
   },
 
@@ -132,25 +134,34 @@ const mutations = {
   },
 
   async updatePermissions(parent, { id, permissions }, ctx, info) {
-    if (!ctx.request.userID) {
-      throw Error("You need to be logged in to do that");
-    }
-    const caller = await ctx.db.query.user({ where: { id: ctx.request.userID } }, `{permissions}`);
-    if (!caller) {
-      throw Error(`User from ctx was not found`);
-    }
-
-    if (!hasPermission(caller.permissions, UPDATE_PERMISSIONS)) {
-      throw Error(`Unauthorized,  - request for one of ${UPDATE_PERMISSIONS} scopes`);
-    }
-
+    const caller = await getVerifiedUser(ctx);
+    verifyAuthorization(caller, PERMISSIONS_UPDATE_PERMISSIONS);
     const userToUpdate = await ctx.db.query.user({ where: { id } }, `{permissions}`);
     if (!userToUpdate) {
       throw Error(`Requested user was not found`);
     }
-
     return ctx.db.mutation.updateUser({ where: { id }, data: { permissions: { set: permissions } } }, info);
   },
 };
+
+async function getVerifiedUser(ctx) {
+  if (!ctx.request.userID) {
+    throw Error("You need to be logged in to do that");
+  }
+
+  const caller = await ctx.db.query.user({ where: { id: ctx.request.userID } }, `{permissions}`);
+  if (!caller) {
+    throw Error(`User from ctx was not found`);
+  }
+
+  return caller;
+}
+function verifyAuthorization(user, expectedPermissions, userIDToCompare = null) {
+  const sameUser = user.id === userIDToCompare;
+  const permissionIsGranted = hasPermission(user.permissions, expectedPermissions);
+  if (!sameUser && !permissionIsGranted) {
+    throw Error(`Unauthorized,  - request for one of ${expectedPermissions} scopes`);
+  }
+}
 
 module.exports = mutations;
