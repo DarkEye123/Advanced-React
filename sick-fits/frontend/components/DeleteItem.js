@@ -14,29 +14,19 @@ const DELETE_ITEM_MUTATION = gql`
 export default class DeleteItem extends Component {
   askDeletion(fn) {
     if (confirm("Are you sure you want to delete this item?")) {
-      fn();
+      fn().catch(e => alert(e));
     }
   }
   update(cache, payload) {
     console.log(cache, payload);
     const data = cache.readQuery({ query: ALL_ITEMS_QUERY });
-    data.items = data.items.filter(
-      ({ id }) => id !== payload.data.deleteItem.id
-    );
+    data.items = data.items.filter(({ id }) => id !== payload.data.deleteItem.id);
     cache.writeQuery({ query: ALL_ITEMS_QUERY, data });
   }
   render() {
     return (
-      <Mutation
-        mutation={DELETE_ITEM_MUTATION}
-        variables={{ id: this.props.id }}
-        update={this.update}
-      >
-        {(deleteItem, { error }) => (
-          <button onClick={() => this.askDeletion(deleteItem)}>
-            {this.props.children}
-          </button>
-        )}
+      <Mutation mutation={DELETE_ITEM_MUTATION} variables={{ id: this.props.id }} update={this.update}>
+        {(deleteItem, { error }) => <button onClick={() => this.askDeletion(deleteItem)}>{this.props.children}</button>}
       </Mutation>
     );
   }
