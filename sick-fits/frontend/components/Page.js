@@ -4,6 +4,7 @@ import Meta from "./Meta";
 import styled, { ThemeProvider, injectGlobal } from "styled-components";
 import Router from "next/router";
 import NProgress from "nprogress";
+import Cart from "./Cart";
 
 Router.onRouteChangeStart = () => {
   NProgress.start();
@@ -26,7 +27,7 @@ const theme = {
   maxWidth: "1000px",
   bs: "0 12px 24px 0 rgba(0, 0, 0, 0.09)",
   mediaSize: "1300px",
-  singleItemSize: "700px"
+  singleItemSize: "700px",
 };
 
 theme.lightgrey = theme.lightGrey;
@@ -82,6 +83,7 @@ export default class Page extends Component {
           <Meta />
           <Header />
           <Inner>{this.props.children}</Inner>
+          <Cart />
         </StyledPage>
       </ThemeProvider>
     );
