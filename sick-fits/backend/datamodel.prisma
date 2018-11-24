@@ -28,3 +28,10 @@ type Item {
   updatedAt: DateTime!
   user: User!
 }
+
+type CartItem {
+  id: ID! @unique
+  quantity: Int @default(value: 1)
+  user: User!
+  item: Item!
+}
