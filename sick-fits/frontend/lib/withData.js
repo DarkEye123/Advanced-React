@@ -12,10 +12,14 @@ function createClient({ headers }) {
     clientState: {
       resolvers: {
         Mutation: {
-          toggleShowCart: (obj, args, { cache }, info) => {
-            const { showCart } = cache.readQuery({ query: QUERY_CART_OPEN });
-            const data = { data: { __typename: Boolean, showCart: !showCart } };
+          toggleShowCart(obj, args, { cache }, info) {
+            const { showCart } = cache.readQuery({
+              query: QUERY_CART_OPEN,
+            });
+            // IMPORTANT --  __typename: "Boolean" Boolean needs to be in "" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            const data = { data: { __typename: "Boolean", showCart: !showCart } };
             cache.writeData(data);
+            return data;
           },
         },
       },
