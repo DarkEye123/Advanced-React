@@ -142,6 +142,25 @@ const mutations = {
     }
     return ctx.db.mutation.updateUser({ where: { id }, data: { permissions: { set: permissions } } }, info);
   },
+
+  async addToCart(parent, { id }, ctx, info) {
+    // verify user
+    const caller = await getVerifiedUser(ctx);
+    // check if added item already exists in user's cart
+    const [cartItem] = await ctx.db.query.cartItems(
+      { where: { user: { id: caller.id }, item: { id } } },
+      `{id quantity}`,
+    );
+
+    return ctx.db.mutation.upsertCartItem(
+      {
+        where: { id: cartItem ? cartItem.id : "" },
+        create: { user: { connect: { id: caller.id } }, item: { connect: { id } } },
+        update: { quantity: cartItem ? cartItem.quantity + 1 : 1 },
+      },
+      info,
+    );
+  },
 };
 
 async function getVerifiedUser(ctx) {
@@ -149,7 +168,7 @@ async function getVerifiedUser(ctx) {
     throw Error("You need to be logged in to do that");
   }
 
-  const caller = await ctx.db.query.user({ where: { id: ctx.request.userID } }, `{permissions}`);
+  const caller = await ctx.db.query.user({ where: { id: ctx.request.userID } }, `{id permissions}`);
   if (!caller) {
     throw Error(`User from ctx was not found`);
   }

@@ -15,6 +15,7 @@ type User {
   permissions: [Permission!]!
   resetToken: String @unique
   resetTokenExpiry: Float
+  cart: [CartItem]!
 }
 
 type Item {

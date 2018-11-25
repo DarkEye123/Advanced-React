@@ -6,10 +6,11 @@ import PriceTag from "./styles/PriceTag";
 import ItemStyles from "./styles/ItemStyles";
 import formatMoney from "../lib/formatMoney";
 import DeleteItem from "./DeleteItem";
+import AddToCart from "./AddToCart";
 
 export default class Item extends Component {
   static propTypes = {
-    item: PropTypes.object.isRequired
+    item: PropTypes.object.isRequired,
     // it could be specified also as: but for the purpose of the course object is enough
     // item: PropTypes.shape({
     //   title: PropTypes.string.isRequired,
@@ -34,7 +35,7 @@ export default class Item extends Component {
           <Link href={{ pathname: "/update/item", query: { id: item.id } }}>
             <a>Edit </a>
           </Link>
-          <button>Add To Cart</button>
+          <AddToCart id={item.id} />
           <DeleteItem id={item.id}>Delete This Item</DeleteItem>
         </div>
       </ItemStyles>

@@ -15,7 +15,6 @@ function createClient({ headers }) {
           toggleShowCart: (obj, args, { cache }, info) => {
             const { showCart } = cache.readQuery({ query: QUERY_CART_OPEN });
             const data = { data: { __typename: Boolean, showCart: !showCart } };
-            console.log(data);
             cache.writeData(data);
           },
         },
