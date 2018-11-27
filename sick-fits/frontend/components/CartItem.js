@@ -1,7 +1,18 @@
 import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
+import { Mutation } from "react-apollo";
+import gql from "graphql-tag";
+import { CURRENT_USER_QUERY } from "./User";
 import formatMoney from "../lib/formatMoney";
+
+export const MUTATION_REMOVE_CARTITEM = gql`
+  mutation MUTATION_REMOVE_CARTITEM($id: ID!) {
+    removeCartItem(id: $id) {
+      id
+    }
+  }
+`;
 
 const CartItemStyled = styled.li`
   display: grid;
@@ -16,7 +27,31 @@ const CartItemStyled = styled.li`
   h3 {
     margin: 0;
   }
+  button {
+    font-size: 3rem;
+    border: none;
+    background-color: white;
+    color: black;
+    margin-right: 10px;
+    :hover {
+      color: ${props => props.theme.red};
+      cursor: pointer;
+    }
+  }
 `;
+
+function update(
+  cache,
+  {
+    data: {
+      removeCartItem: { id },
+    },
+  },
+) {
+  const data = cache.readQuery({ query: CURRENT_USER_QUERY });
+  data.me.cart = data.me.cart.filter(cartItem => cartItem.id !== id);
+  cache.writeQuery({ query: CURRENT_USER_QUERY, data });
+}
 
 const CartItem = ({ cartItem }) => (
   <CartItemStyled>
@@ -28,6 +63,14 @@ const CartItem = ({ cartItem }) => (
         {formatMoney(cartItem.item.price)} each
       </p>
     </div>
+    <Mutation
+      mutation={MUTATION_REMOVE_CARTITEM}
+      variables={{ id: cartItem.id }}
+      update={update}
+      optimisticResponse={{ removeCartItem: { __typename: "CartItem", id: cartItem.id } }}
+    >
+      {(removeCartItem, _) => <button onClick={removeCartItem}>×</button>}
+    </Mutation>
   </CartItemStyled>
 );
 

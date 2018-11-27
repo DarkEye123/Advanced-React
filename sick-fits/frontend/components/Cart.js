@@ -30,7 +30,6 @@ export default class Cart extends Component {
           if (!me) {
             return null;
           }
-          console.log(me.cart);
           return (
             <Mutation mutation={MUTATION_TOGGLE_CART_OPEN}>
               {(toggleShowCart, _) => (
