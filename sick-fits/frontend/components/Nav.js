@@ -3,7 +3,12 @@ import { Mutation } from "react-apollo";
 import NavStyles from "./styles/NavStyles";
 import User from "./User";
 import Logout from "./Logout";
+import AnimatedDotCounter from "./AnimatedDotCounter";
 import { MUTATION_TOGGLE_CART_OPEN } from "./Cart";
+
+function countCartItems({ cart }) {
+  return cart.reduce((tally, item) => tally + item.quantity, 0);
+}
 
 const Nav = () => (
   <User>
@@ -32,7 +37,11 @@ const Nav = () => (
               <a>Account</a>
             </Link>
             <Mutation mutation={MUTATION_TOGGLE_CART_OPEN}>
-              {(toggleShowCart, _) => <button onClick={toggleShowCart}>Cart</button>}
+              {(toggleShowCart, _) => (
+                <button onClick={toggleShowCart}>
+                  Cart <AnimatedDotCounter number={countCartItems(me)} />
+                </button>
+              )}
             </Mutation>
             <Logout>Logout</Logout>
           </>
