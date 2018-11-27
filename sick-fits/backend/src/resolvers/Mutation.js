@@ -160,15 +160,15 @@ const mutations = {
     );
   },
 
-  async removeFromCart(parent, { id }, ctx, info) {
-    const cartItem = await ctx.db.cartItem({ where: { id } }, `{user {id}}`);
+  async removeCartItem(parent, { id }, ctx, info) {
+    const cartItem = await ctx.db.query.cartItem({ where: { id } }, `{user {id}}`);
     if (!cartItem) {
       throw Error("no cartItem found");
     }
     if (ctx.request.userID !== cartItem.user.id) {
       throw Error("you can't delete somebody else's item");
     }
-    return ctx.db.deleteCartItem({ where: { id } }, info);
+    return ctx.db.mutation.deleteCartItem({ where: { id } }, info);
   },
 };
 
