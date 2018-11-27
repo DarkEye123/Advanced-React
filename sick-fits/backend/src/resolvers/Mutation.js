@@ -12,7 +12,7 @@ const mutations = {
   // return promise
   async createItem(parent, args, ctx, info) {
     if (!ctx.request.userID) {
-      throw Error("You need to be logged in to do that");
+      throw Error("you need to be logged in to do that");
     }
     const item = await ctx.db.mutation.createItem({
       data: {
@@ -29,7 +29,7 @@ const mutations = {
 
   async updateItem(parent, args, ctx, info) {
     if (!ctx.request.userID) {
-      throw Error("You need to be logged in to do that");
+      throw Error("you need to be logged in to do that");
     }
     // TODO add comparison of the owner
     const updates = { ...args };
@@ -71,10 +71,10 @@ const mutations = {
   async signIn(parent, { email, password }, ctx, info) {
     const user = await ctx.db.query.user({ where: { email } });
     if (!user) {
-      throw Error(`No user with email: ${email} is registered`);
+      throw Error(`no user with email: ${email} is registered`);
     }
     if (!(await bcrypt.compare(password, user.password))) {
-      throw Error("Invalid password");
+      throw Error("invalid password");
     }
 
     token = jwt.sign({ userID: user.id }, process.env.APP_SECRET);
@@ -91,7 +91,7 @@ const mutations = {
   async requestResetToken(parent, { email }, ctx, info) {
     const user = await ctx.db.query.user({ where: { email } });
     if (!user) {
-      throw Error(`No user with email: ${email} is registered`);
+      throw Error(`no user with email: ${email} is registered`);
     }
 
     const resetToken = promisify(randomBytes)(20);
@@ -114,11 +114,11 @@ const mutations = {
   async resetPassword(parent, { resetToken, password }, ctx, info) {
     const user = await ctx.db.query.user({ where: { resetToken } });
     if (!user) {
-      throw Error(`Token ${resetToken} does not exist`);
+      throw Error(`token ${resetToken} does not exist`);
     }
     if (user.resetTokenExpiry < Date.now()) {
       ctx.db.mutation.updateUser({ where: { resetToken }, data: { resetToken: null, resetTokenExpiry: null } });
-      throw Error(`Token ${resetToken} is expired`);
+      throw Error(`token ${resetToken} is expired`);
     }
     const hashedPass = await bcrypt.hash(password, 10);
 
@@ -138,15 +138,13 @@ const mutations = {
     verifyAuthorization(caller, PERMISSIONS_UPDATE_PERMISSIONS);
     const userToUpdate = await ctx.db.query.user({ where: { id } }, `{permissions}`);
     if (!userToUpdate) {
-      throw Error(`Requested user was not found`);
+      throw Error(`requested user was not found`);
     }
     return ctx.db.mutation.updateUser({ where: { id }, data: { permissions: { set: permissions } } }, info);
   },
 
   async addToCart(parent, { id }, ctx, info) {
-    // verify user
     const caller = await getVerifiedUser(ctx);
-    // check if added item already exists in user's cart
     const [cartItem] = await ctx.db.query.cartItems(
       { where: { user: { id: caller.id }, item: { id } } },
       `{id quantity}`,
@@ -161,16 +159,27 @@ const mutations = {
       info,
     );
   },
+
+  async removeFromCart(parent, { id }, ctx, info) {
+    const cartItem = await ctx.db.cartItem({ where: { id } }, `{user {id}}`);
+    if (!cartItem) {
+      throw Error("no cartItem found");
+    }
+    if (ctx.request.userID !== cartItem.user.id) {
+      throw Error("you can't delete somebody else's item");
+    }
+    return ctx.db.deleteCartItem({ where: { id } }, info);
+  },
 };
 
 async function getVerifiedUser(ctx) {
   if (!ctx.request.userID) {
-    throw Error("You need to be logged in to do that");
+    throw Error("you need to be logged in to do that");
   }
 
   const caller = await ctx.db.query.user({ where: { id: ctx.request.userID } }, `{id permissions}`);
   if (!caller) {
-    throw Error(`User from ctx was not found`);
+    throw Error(`user from ctx was not found`);
   }
 
   return caller;
@@ -179,7 +188,7 @@ function verifyAuthorization(user, expectedPermissions, userIDToCompare = null) 
   const sameUser = user.id === userIDToCompare;
   const permissionIsGranted = hasPermission(user.permissions, expectedPermissions);
   if (!sameUser && !permissionIsGranted) {
-    throw Error(`Unauthorized,  - request for one of ${expectedPermissions} scopes`);
+    throw Error(`unauthorized,  - request for one of ${expectedPermissions} scopes`);
   }
 }
 
