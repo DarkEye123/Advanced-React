@@ -1,6 +1,12 @@
+import { Mutation } from "react-apollo";
+import { adopt } from "react-adopt";
+import countCartItems from "../lib/countCartItems";
+import { MUTATION_TOGGLE_CART_OPEN } from "./Cart";
+import User from "./User";
 import Nav from "./Nav";
 import styled from "styled-components";
 import Link from "next/link";
+import AnimatedDotCounter from "./AnimatedDotCounter";
 
 const Logo = styled.h1`
   transform: skew(-7deg);
@@ -38,8 +44,21 @@ const StyledHeader = styled.header`
     border-bottom: 1px solid ${props => props.theme.lightGrey};
     display: grid;
     grid-template-columns: 1fr auto;
+    button {
+      padding: 1rem 3rem;
+      display: flex;
+      font-size: 2rem;
+      background: none;
+      border: 0;
+      cursor: pointer;
+    }
   }
 `;
+
+const Composed = adopt({
+  currentUser: ({ render }) => <User>{render}</User>,
+  toggleShowCart: ({ render }) => <Mutation mutation={MUTATION_TOGGLE_CART_OPEN}>{render}</Mutation>,
+});
 
 const Header = () => (
   <StyledHeader>
@@ -53,8 +72,14 @@ const Header = () => (
     </div>
     <div className="sub-bar">
       <p>Search</p>
+      <Composed>
+        {({ currentUser, toggleShowCart }) => (
+          <button onClick={toggleShowCart}>
+            🛒 <AnimatedDotCounter number={countCartItems(currentUser.data.me)} />
+          </button>
+        )}
+      </Composed>
     </div>
-    <div>Cart</div>
   </StyledHeader>
 );
 
