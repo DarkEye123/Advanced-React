@@ -23,7 +23,7 @@ function createClient({ headers }) {
           },
         },
       },
-      defaults: { showCart: true },
+      defaults: { showCart: false },
     },
   });
 }

@@ -7,6 +7,7 @@ import Nav from "./Nav";
 import styled from "styled-components";
 import Link from "next/link";
 import AnimatedDotCounter from "./AnimatedDotCounter";
+import Search from "./Search";
 
 const Logo = styled.h1`
   transform: skew(-7deg);
@@ -71,7 +72,7 @@ const Header = () => (
       <Nav />
     </div>
     <div className="sub-bar">
-      <p>Search</p>
+      <Search />
       <Composed>
         {({ currentUser, toggleShowCart }) => (
           <button onClick={toggleShowCart}>
