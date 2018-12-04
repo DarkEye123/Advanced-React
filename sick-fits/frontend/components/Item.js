@@ -32,10 +32,12 @@ export default class Item extends Component {
         <PriceTag>{formatMoney(item.price)}</PriceTag>
         <p>{item.description}</p>
         <div className="buttonList">
+          {/* TODO: invalidate if there is no "user logged" */}
           <Link href={{ pathname: "/update/item", query: { id: item.id } }}>
             <a>Edit </a>
           </Link>
           <AddToCart id={item.id} />
+          {/* TODO: invalidate if there is no "user logged" */}
           <DeleteItem id={item.id}>Delete This Item</DeleteItem>
         </div>
       </ItemStyles>

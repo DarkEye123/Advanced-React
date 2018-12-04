@@ -74,9 +74,10 @@ const Header = () => (
     <div className="sub-bar">
       <Search />
       <Composed>
+        {/* TODO: cart for "random person" */}
         {({ currentUser, toggleShowCart }) => (
           <button onClick={toggleShowCart}>
-            🛒 <AnimatedDotCounter number={countCartItems(currentUser.data.me)} />
+            🛒 <AnimatedDotCounter number={currentUser.data.me ? countCartItems(currentUser.data.me) : 0} />
           </button>
         )}
       </Composed>
